@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,15 +26,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mvvmexample.NetworkManager
+import com.example.mvvmexample.model.Product
 import com.example.mvvmexample.viewmodel.ProductViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
 
 @Composable
 fun ProductView(productViewModel: ProductViewModel = viewModel()) {
-    val productList by productViewModel.products
-    val networkManager = NetworkManager()
-
+    val productList by productViewModel.products.observeAsState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -50,9 +51,8 @@ fun ProductView(productViewModel: ProductViewModel = viewModel()) {
         ) {
             Button(
                 onClick = {
-                    runBlocking(Dispatchers.IO) {
-                        val result = networkManager.fetchProducts()
-                        productViewModel.updateProducts(result)
+                    runBlocking(Dispatchers.Default) {
+                        productViewModel.updateProducts()
                     }
                 },
                 modifier = Modifier
@@ -79,7 +79,7 @@ fun ProductView(productViewModel: ProductViewModel = viewModel()) {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                items(productList) { product ->
+                items(productList ?: emptyList()) { product ->
                     Card(
                         modifier = Modifier
                             .padding(10.dp)
